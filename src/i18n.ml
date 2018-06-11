@@ -54,6 +54,8 @@ let s_ ?id s =
         Hashtbl.find dict (s, None)
       with Not_found -> s
 
+module OP = struct
+
 let t_ ?id ?(args=[]) s =
   let s = s_ ?id s in
   if args = [] then
@@ -68,6 +70,7 @@ let t_ ?id ?(args=[]) s =
     with Not_found -> s
 
 let s_ s = s_ s
+end
 
 let get_lang () = !current_lang
 let get_langs () =

@@ -10,6 +10,17 @@
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software. *)
 
+(* Open this module only, as these functions are seen as combinators *)
+module OP : sig
+  (* [s_] and [t_] never fail, even if no translation is available *)
+  (* Return the basic translation *)
+  val s_ : string -> string
+  (* Returns the translation, using a possible identifier, and substitutes
+     variables if available *)
+  val t_ : ?id:string -> ?args:(string * string) list -> string -> string
+end
+
+
 (* Returns the current language or None *)
 val get_lang : unit -> string option
 
@@ -18,13 +29,6 @@ val set_lang : string -> unit
 
 (* Current list of known languages *)
 val get_langs : unit -> string list
-
-(* [s_] and [t_] never fail, even if no translation is available *)
-(* Return the basic translation *)
-val s_ : string -> string
-(* Returns the translation, using a possible identifier, and substitutes
-    variables if available *)
-val t_ : ?id:string -> ?args:(string * string) list -> string -> string
 
 (* Hook called at the end of [set_lang] *)
 val set_lang_hook : (string -> unit) ref
