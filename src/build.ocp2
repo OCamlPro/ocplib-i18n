@@ -10,8 +10,11 @@ OCaml.program("ppx_ocplib_i18n", ocaml + {
 ppx = [ "-ppx"; "%{ppx_ocplib_i18n_FULL_DST_DIR}%/ppx_ocplib_i18n.asm" ];
 
 OCaml.library("ocplib_i18n", ocaml + {
-  comp_requires = "ppx_ocplib_i18n:asm";
-  requires = [ "ppx_ocplib_i18n"; "ocplib-compat" ];
+  requires = [
+    "ppx_ocplib_i18n";
+    "ocplib-compat";
+    "ocplib-file";
+    ];
   has_asm = true;
   has_byte = true;
   files = [

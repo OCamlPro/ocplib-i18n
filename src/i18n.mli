@@ -10,14 +10,19 @@
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software. *)
 
+type page
+val get_page : string -> page
+val page_name : page -> string
+val default_page : page
+
 (* Open this module only, as these functions are seen as combinators *)
 module OP : sig
   (* [s_] and [t_] never fail, even if no translation is available *)
   (* Return the basic translation *)
-  val s_ : string -> string
+  val s_ : ?page:page -> string -> string
   (* Returns the translation, using a possible identifier, and substitutes
      variables if available *)
-  val t_ : ?id:string -> ?args:(string * string) list -> string -> string
+  val t_ : ?page:page -> ?args:(string * string) list -> string -> string
 end
 
 
@@ -34,9 +39,18 @@ val get_langs : unit -> string list
 val set_lang_hook : (string -> unit) ref
 
 (* Hook called when a translation is not found *)
-val no_translation_hook : (string -> string * string option -> unit) ref
+val no_translation_hook : (string -> page -> string -> unit) ref
 
 (* Add translations for a particular language *)
-val add_translations : string -> ?id:string -> (string * string) list -> unit
+val add_translations : string -> ?page:page -> (string * string) list -> unit
 
 val same : string -> string * string
+
+val add_translation_files : (string * string) list -> unit
+val add_translation_file : ?lang:string -> string -> unit
+val add_translation_file_content : lang:string -> string -> unit
+
+val parse_error : (?filename:string -> int -> unit) ref
+val parse_file_content :
+  (?filename:string ->
+   string -> (page * (string * string) list) list) ref
