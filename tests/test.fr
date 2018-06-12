@@ -1,3 +1,4 @@
+
 (*******************************)
 
      page "Test"
@@ -6,12 +7,14 @@
 
 "Hello World" = "Bonjour mon Monde"
 "Hello World !" = ""
-= 3
+
 (*******************************)
 
      page "Default"
 
 (*******************************)
 
-"Hello World" = "Bonjour Monde"
+"Hello World" = ""
 "My name is ${name}" = ""
+"Translations saved in ${file}" = "Traductions sauvegardées dans ${file}"
+

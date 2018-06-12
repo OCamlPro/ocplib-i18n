@@ -12,5 +12,10 @@ let () =
   I18n.set_lang "en";
   Printf.eprintf "%s !\n%!" (s_ "Hello World");
   I18n.eprintln ~page "Hello World !" [];
-  I18n.save_lang ~lang:"fr" "translations.fr";
+
+  let file =  "translations.fr" in
+  let msg = I18n.declare "Translations saved in ${file}" in
+  I18n.save_lang ~lang:"fr" file;
+  I18n.set_lang "fr";
+  I18n.eprintln msg ["file", file ];
   ()

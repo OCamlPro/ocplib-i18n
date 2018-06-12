@@ -70,7 +70,7 @@ let add_prepare ~lang f =
 
 let add_page_translation dict page (s1,s2) =
   page.page_keys <- StringSet.add s1 page.page_keys;
-  Hashtbl.add dict (s1,page.page_id) s2
+  if s2 <> "" then Hashtbl.add dict (s1,page.page_id) s2
 
 let add_translations lang ?(page=default_page) list =
   add_prepare ~lang (fun dict ->
@@ -83,6 +83,11 @@ let prepare_dict dict =
   | list ->
     List.iter (fun f -> f dict.dict) (List.rev list);
     dict.prepare <- []
+
+let declare ?(page=default_page) s =
+  if not (StringSet.mem s page.page_keys) then
+    page.page_keys <- StringSet.add s page.page_keys;
+  s
 
 module OP = struct
 
@@ -103,9 +108,12 @@ module OP = struct
         if not (StringSet.mem s page.page_keys) then
           page.page_keys <- StringSet.add s page.page_keys;
         !no_translation_hook lang page s;
-        try
-          Hashtbl.find dict (s, default_page.page_id)
-        with Not_found -> s
+        if page != default_page then
+          try
+            Hashtbl.find dict (s, default_page.page_id)
+          with Not_found -> s
+        else
+          s
 
   let t_ ?(page=default_page) ?(args=[]) s =
     let s = s_ ~page s in
@@ -230,3 +238,21 @@ let save_lang ~lang filename =
   Printf.fprintf oc "\n";
   close_out oc;
   ()
+
+let extract_lang ~lang =
+  StringMap.iter (fun _ dict ->
+      prepare_dict dict
+    ) !dictionaries;
+  let dict = get_dict lang in
+  let list = ref [] in
+  Hashtbl.iter (fun _ page ->
+      let translations = ref [] in
+      StringSet.iter (fun key ->
+          let v = try Hashtbl.find dict.dict (key, page.page_id)
+            with Not_found -> "" in
+          let v = if v = key then "" else v in
+          translations := (key, v) :: !translations
+        ) page.page_keys;
+      list := (page, !translations) :: !list;
+    ) pages;
+  !list

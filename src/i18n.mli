@@ -50,8 +50,16 @@ val set_lang_hook : (string -> unit) ref
 (* Hook called when a translation is not found *)
 val no_translation_hook : (string -> page -> string -> unit) ref
 
-(* Add translations for a particular language *)
+(* Add translations for a particular language.
+   Note that an empty translation (i.e. "") is understood as not found.
+   If a translation is not found in the page required, a lookup is
+   performed in the default_page.
+ *)
 val add_translations : string -> ?page:page -> (string * string) list -> unit
+
+(* [declare ~page s] declares that a translation is needed for the string [s].
+   If [save_lang] or [extract_lang] is used, the string will be included. *)
+val declare : ?page:page -> string -> string
 
 val same : string -> string * string
 
@@ -91,3 +99,5 @@ val eprintln : ?page:page -> string -> (string * string) list -> unit
 (* [save_lang ~lang filename] save the known translations for a particular
    language, together with known missing translations. *)
 val save_lang : lang:string -> string -> unit
+
+val extract_lang : lang:string -> (page * (string * string) list) list
