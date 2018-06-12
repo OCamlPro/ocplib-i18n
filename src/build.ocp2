@@ -1,0 +1,25 @@
+
+
+OCaml.program("ppx-ocplib-i18n", ocaml + {
+  has_asm = true;
+  has_byte = false;
+  requires = [ "compiler-libs.common"  ];
+  files = [ "ppx_ocplib_i18n.ml" ];
+  });
+
+ppx = [ "-ppx"; "%{ppx_ocplib_i18n_FULL_DST_DIR}%/ppx_ocplib_i18n.asm" ];
+
+OCaml.library("ocplib-i18n", ocaml + {
+  requires = [
+    "ppx-ocplib-i18n";
+    "ocplib-compat";
+    "ocplib-file";
+    ];
+  has_asm = true;
+  has_byte = true;
+  files = [
+(*    "ocplib_i18n.ml", { bytecomp = ppx; asmcomp = ppx; }; *)
+    "ocplib_i18n.ml";
+    "i18n.ml";
+  ];
+  });

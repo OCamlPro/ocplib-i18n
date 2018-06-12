@@ -1,0 +1,20 @@
+
+(*******************************)
+
+     page "Test"
+
+(*******************************)
+
+"Hello World" = "Bonjour mon Monde"
+"Hello World !" = ""
+
+(*******************************)
+
+     page "Default"
+
+(*******************************)
+
+"Hello World" = ""
+"My name is ${name}" = ""
+"Translations saved in ${file}" = "Traductions sauvegardées dans ${file}"
+

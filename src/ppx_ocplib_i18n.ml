@@ -79,7 +79,7 @@ let find_translation lang ht ~loc s =
       (Printf.sprintf "%s translation not found for %S" lang s);
     s
 
-lllet dump_pot () =
+let dump_pot () =
   Hashtbl.iter (fun lang strs ->
       let file = Filename.concat translations_dir (lang ^ ".pot") in
       let oc = open_out_gen [Open_append; Open_creat] 0o644 file in

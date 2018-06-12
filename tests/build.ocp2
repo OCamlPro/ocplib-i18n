@@ -1,0 +1,9 @@
+
+OCaml.program("ocplib-i18n-test", ocaml + {
+     files = [
+        "trans.ml", { file2string = [ "test.fr"; "test.en" ] };
+        "test.ml";
+     ];
+     requires = [ "ocplib-i18n" ];
+
+  });
