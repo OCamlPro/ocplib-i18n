@@ -1,1 +1,17 @@
+(*******************************)
 
+     page "Test"
+
+(*******************************)
+
+"Hello World" = "Bonjour mon Monde"
+"Hello World !" = ""
+= 3
+(*******************************)
+
+     page "Default"
+
+(*******************************)
+
+"Hello World" = "Bonjour Monde"
+"My name is ${name}" = ""

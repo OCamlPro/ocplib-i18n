@@ -16,6 +16,7 @@ type dictionary = (string * int, string) Hashtbl.t
 type page = {
   page_name : string;
   page_id : int;
+  mutable page_keys : StringSet.t;
 }
 
 type dict = {
@@ -43,11 +44,11 @@ let get_page =
     with Not_found ->
       let page_id = !id in
       incr id;
-      let page = { page_name; page_id } in
+      let page = { page_name; page_id; page_keys = StringSet.empty } in
       Hashtbl.add pages page_name page;
       page
 
-let default_page = get_page "default"
+let default_page = get_page "Default"
 
 let get_dict lang =
   try
@@ -67,10 +68,21 @@ let add_prepare ~lang f =
   let dict = get_dict lang in
   dict.prepare <- f :: dict.prepare
 
+let add_page_translation dict page (s1,s2) =
+  page.page_keys <- StringSet.add s1 page.page_keys;
+  Hashtbl.add dict (s1,page.page_id) s2
+
 let add_translations lang ?(page=default_page) list =
   add_prepare ~lang (fun dict ->
-      List.iter (fun (s1, s2) -> Hashtbl.add dict (s1,page.page_id) s2) list
+      List.iter (add_page_translation dict page) list
     )
+
+let prepare_dict dict =
+  match dict.prepare with
+  | [] -> ()
+  | list ->
+    List.iter (fun f -> f dict.dict) (List.rev list);
+    dict.prepare <- []
 
 module OP = struct
 
@@ -78,12 +90,7 @@ module OP = struct
     match !current_dict with
     | None -> s
     | Some dict ->
-      begin match dict.prepare with
-        | [] -> ()
-        | list ->
-          List.iter (fun f -> f dict.dict) (List.rev list);
-          dict.prepare <- []
-      end;
+      prepare_dict dict;
       let dict = dict.dict in
       try
         Hashtbl.find dict (s, page.page_id)
@@ -93,6 +100,8 @@ module OP = struct
           | None -> "<none>"
           | Some lang -> lang
         in
+        if not (StringSet.mem s page.page_keys) then
+          page.page_keys <- StringSet.add s page.page_keys;
         !no_translation_hook lang page s;
         try
           Hashtbl.find dict (s, default_page.page_id)
@@ -141,6 +150,8 @@ let parse_file_content ?filename content =
       let translations = (page, page_translations) :: translations in
       let page = get_page page_name in
       iter page [] translations tokens
+    | (String s1,_) :: (Kwd "=", _) :: (String "",_) :: tokens ->
+      iter page ( (s1,s1) :: page_translations ) translations tokens
     | (String s1,_) :: (Kwd "=", _) :: (String s2,_) :: tokens ->
       iter page ( (s1,s2) :: page_translations ) translations tokens
     | (_, pos) :: _ ->
@@ -157,9 +168,7 @@ let parse_file_content = ref parse_file_content
 let add_file_content ?filename content dict =
   let translations = !parse_file_content ?filename content in
   List.iter (fun (page, translations) ->
-      List.iter (fun (s1, s2) ->
-          Hashtbl.add dict (s1, page.page_id) s2
-        ) translations
+      List.iter (add_page_translation dict page) translations
     ) translations
 
 let add_translation_file_content ~lang content =
@@ -185,3 +194,39 @@ let add_translation_files files =
       let lang = lang_of_filename filename in
       add_prepare ~lang (add_file_content ~filename content)
     ) files
+
+
+open OP
+
+let println ?page s args =
+  Printf.printf "%s\n%!" (t_ ?page s ~args)
+
+let eprintln ?page s args =
+  Printf.eprintf "%s\n%!" (t_ ?page s ~args)
+
+let print ?page s args =
+  Printf.printf "%s%!" (t_ ?page s ~args)
+
+let eprint ?page s args =
+  Printf.printf "%s%!" (t_ ?page s ~args)
+
+let save_lang ~lang filename =
+  StringMap.iter (fun _ dict ->
+      prepare_dict dict
+    ) !dictionaries;
+  let dict = get_dict lang in
+  let oc = open_out filename in
+  Hashtbl.iter (fun _ page ->
+      Printf.fprintf oc "\n(*******************************)\n";
+      Printf.fprintf oc "\n     page %S\n" page.page_name;
+      Printf.fprintf oc "\n(*******************************)\n\n";
+      StringSet.iter (fun key ->
+          let v = try Hashtbl.find dict.dict (key, page.page_id)
+            with Not_found -> "" in
+          let v = if v = key then "" else v in
+          Printf.fprintf oc "%S = %S\n" key v
+        ) page.page_keys;
+    ) pages;
+  Printf.fprintf oc "\n";
+  close_out oc;
+  ()
